@@ -2,3 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# Everything inside this is not useful
+Data/**/*
+!Data/.gitkeep
