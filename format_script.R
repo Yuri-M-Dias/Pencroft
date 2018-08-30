@@ -2,9 +2,9 @@
 library(tidyverse)
 library(parallel)
 
-
 # TODO: convert the bash file to pure R...?
 
+# Assuming root folder
 current.wd = getwd()
 message(sprintf("Current working dir: %s", current.wd))
 
@@ -17,7 +17,7 @@ kernels.authors = dir(
     path = paste0(current.wd, kernels.data.path),
     include.dirs = TRUE
 )
-message(sprintf("Found %i authors", length(kernels.authors)))
+#message(sprintf("Found %i authors", length(kernels.authors)))
 
 for (author in kernels.authors) {
   author.kernels.dirs = dir(
@@ -29,42 +29,52 @@ for (author in kernels.authors) {
     length(author.kernels.dirs),
     author
   ))
-  
+
   for (kernel in author.kernels.dirs) {
-    message(sprintf("Kernel %s", kernel))
-    
+    #message(sprintf("Kernel %s", kernel))
+
     kernel.path = paste0(current.wd, kernels.data.path, author, '/', kernel)
     # Only one script per kernel
     kernel.script = dir(
         path = kernel.path,
-        pattern = "\\.R$", # Ignoring Rmd files for now
+        pattern = "\\.R[md]*",
         include.dirs = FALSE
     )
-    
+
     if (!is_empty(kernel.script)){
-      message(sprintf("Script: %s", kernel.script))
       kernel.path.complete = paste0(kernel.path, '/', kernel.script)
+      #message(sprintf("Script: %s", kernel.path.complete))
       kernels.paths = append(kernels.paths, kernel.path.complete)
     }
   }
-  
+
 }
 
 library(styler)
 library(formatR)
 
 for (kernel in kernels.paths) {
-  message(sprintf("%s", kernel))
-  
-  # Creates backups...
-  kernel.styler = gsub('\\.R', '-styler\\.R', kernel)
-  kernel.formatr = gsub('\\.R', '-formatr\\.R', kernel)
+  message(sprintf("Formatting %s", kernel))
+
+  # Creates backups, since both tools replace the original file
+  kernel.styler = gsub('\\.R([md]*)', '-styler\\.R\\1', kernel)
+  kernel.formatr = gsub('\\.R([md]*)', '-formatr\\.R\\1', kernel)
+  message(sprintf("%s", kernel.styler))
   file.copy(from = kernel, to = kernel.styler)
   file.copy(from = kernel, to = kernel.formatr)
-  
+
   # TODO: styles?!
   styler::style_file(
-    kernel.styler, style = tidyverse_style, strict = TRUE
+    kernel.styler,
+    style = tidyverse_style,
+    strict = TRUE
   )
-  formatR::tidy_file(file = kernel.formatr)
+
+  #TODO: check if Rmd!
+
+  formatR::tidy_file(
+    file = kernel.formatr
+  )
+
 }
+

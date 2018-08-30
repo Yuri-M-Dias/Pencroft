@@ -16,4 +16,6 @@ trim_trailing_whitespace = false
 # https://github.com/rstudio/rstudio/blob/master/src/cpp/.editorconfig
 # R files should end with a newline
 [*.R]
+indent_style = space
+indent_size = 2
 insert_final_newline = true

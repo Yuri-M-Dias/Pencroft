@@ -2,5 +2,5 @@
 
 # **In development**
 
-A Kaggle kernel bot that takes in `Rmd` or `Jupyter R` notebooks and outputs the code chunks following a set format.
+A Kaggle kernel bot that takes in `R` or `Rmd` scripts and outputs the code formatted to either `styleR` or `formatR` standard format.
 

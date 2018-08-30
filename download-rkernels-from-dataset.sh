@@ -3,46 +3,60 @@
 SCRIPT_DIR="${0%/*}"
 
 # @TODO: verify if Kaggle is properly setup as the command line API?
-kaggle --version >> /dev/null
-if [[ ! $? -eq 0 ]]; then
+if ! kaggle --version >> /dev/null
+then
   echo "Non-working kaggle API"
   exit 1
 fi
 
-# Downloads the first 20 R and Rmd kernels for a given dataset
 DATA_KERNELS_DEST="$SCRIPT_DIR/Data"
-DATASET_SLUG=""
+KAGGLE_NO_KERNELS='No kernels found'
 
+page=1
 # Selects the kernels
-# TODO: work with a single script?
-#TODO: only doing for the top 20 for now, to test it.
-list_slugs=$(
-kaggle kernels list \
-  --language r \
-  --sort-by relevance \
-  --kernel-type script \
-  --page 1 | \
-  awk 'NR>2{print $1}'
-) # Ignores first two rows, headers
 
-#???
-#list_slugs=$("$list_slugs" |awk 'NR>2{print $1}'
+while true # I regret nothing
+do
+	list_slugs=$(
+	kaggle kernels list \
+	  --language r \
+	  --sort-by dateCreated \
+	  --kernel-type script \
+	  --page-size 50 \
+	  -m \
+	  --page "$page"
+	)
 
-echo "Downloading kernels"
+	if [ "$list_slugs" = "$KAGGLE_NO_KERNELS" ] # || [ ! $? -eq 0 ]
+	then
+		echo "No more pages"
+		break
+	fi
 
-for slug in $list_slugs; do
-  generated_path="$DATA_KERNELS_DEST/$slug"
-  echo "Downloading $slug to $generated_path"
+	# Ignores first two rows, headers
+	list_slugs=$(
+	(cat <<END
+$list_slugs
+END
+) | \
+	awk 'NR>2{print $1}'
+	)
 
-  kaggle kernels pull "$slug" \
-    -p "$generated_path" \
-    --metadata
+	echo "Downloading kernels"
 
-  if [[ ! $? -eq 0 ]]; then
-    echo "Failed downloading a kernel!"
-  fi
+	for slug in $list_slugs; do
+		generated_path="$DATA_KERNELS_DEST/$slug"
+		echo "Downloading $slug to $generated_path"
+
+		if ! kaggle kernels pull "$slug" \
+			-p "$generated_path" \
+			--metadata
+		then
+			echo "Failed downloading this kernel! Won't try again!"
+		fi
+	done
+
+	let page=page+1
 
 done
-
-# Saves the dataset kernels files to the Data directory
 
