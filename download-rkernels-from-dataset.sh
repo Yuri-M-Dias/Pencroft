@@ -23,7 +23,6 @@ do
 	  --sort-by dateCreated \
 	  --kernel-type script \
 	  --page-size 50 \
-	  -m \
 	  --page "$page"
 	)
 
